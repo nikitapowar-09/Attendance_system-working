@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-image: url('/static/images/admin.jpg');
+      background-size: cover; 
+      background-repeat: no-repeat;
+      background-position: center;
+      background-attachment: fixed;
+      font-family: 'Roboto', sans-serif;
+    }
+
+    .login-container {
+      background-color: rgba(134, 204, 247, 0.5); 
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      width: 400px;
+      height: auto;
+      margin: auto;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .login-container h2 {
+      font-size: 24px;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .login-container input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    .login-container button {
+      width: 95%;
+      padding: 10px;
+      background-color: #037d81; 
+      border: none;
+      border-radius: 5px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .login-container button:hover {
+      background-color: #1ea7c6;
+    }
+
+    #login-status {
+      margin-top: 20px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body >
+  <div class="overlay"> 
+  <div class="login-container">
+    <h2>Admin Login</h2>
+    <!-- 🔔 Flash Message Block -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div id="login-status">
+      {% for category, message in messages %}
+      {% set css_class = 'success' if category == 'success' else 'danger' %}
+      <p class="{{css_class}}">
+          {{ message }}
+        </p>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+<!-- End Flash Message Block -->
+    <form action="/admin/login" method="post">
+      <input type="text" id="admin-id" name="admin_id" placeholder="Enter your Admin ID" required><br>
+      <input type="password" name="password" placeholder="Enter Password" required><br>
+      <button type="submit">Login</button>
+    </form>
+  </div>
+</body>
+</html>

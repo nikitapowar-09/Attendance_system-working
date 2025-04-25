@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Check Attendance</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    table {
+      margin: 30px auto;
+      width: 80%;
+      border-collapse: collapse;
+      background-color: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    table thead th {
+      background-color: skyblue;
+      color: white;
+      padding: 12px;
+      font-size: 18px;
+      border: 1px solid #ddd;
+    }
+    table tbody td {
+      padding: 12px;
+      text-align: center;
+      font-size: 16px;
+      color: #333;
+      border: 1px solid #ddd;
+    }
+    table tbody tr:nth-child(odd) {
+      background-color: #f9f9f9;
+    }
+    table tbody tr:nth-child(even) {
+      background-color: #eafaea;
+    }
+    table tbody tr:hover {
+      background-color: #d3f9d8;
+    }
+    #headings {
+      text-align: center;
+      font-size: 28px;
+      color: #4caf50;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+    .centered-form {
+      text-align: center;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="navbar">
+    <h1 style="color: white;">VisagFace</h1>
+    <nav>
+      <div class="nav-links">
+        <a href="{{ url_for('admin_dashboard') }}">Home</a>
+        <a href="#">Check Attendance</a>
+        <a href="{{ url_for('manage_leaves') }}">Check Request</a>
+        <a href="{{ url_for('register_employee') }}">New Registration</a>
+        <a href="#">Contact</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section>
+    <h2 id="headings">Employee Attendance</h2>
+
+    <!-- Date Selection Form -->
+    <div class="centered-form">
+        <form action="{{ url_for('view_attendance') }}" method="POST">
+            <label for="selected_date">Select Date: </label>
+            <input type="date" id="selected_date" name="selected_date" required value="{{ selected_date }}">
+            <button type="submit" class="btn btn-outline-success">Show Attendance</button>
+        </form>
+    </div>
+
+    <!-- No Data Alert -->
+    {% if no_data %}
+    <p style="text-align: center; color: red; margin-top: 20px;">
+        No attendance data available for the selected date.
+    </p>
+    {% endif %}
+
+    <!-- Attendance Table -->
+    {% if records %}
+    <table>
+        <thead>
+            <tr>
+                <th>Employee ID</th>
+                <th>Name</th>
+                <th>Date</th>
+                <th>Check-In</th>
+                <th>Check-Out</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in records %}
+            <tr>
+                <td>{{ record.emp_id }}</td>
+                <td>{{ record.name }}</td>
+                <td>{{ record.date }}</td>
+                <td>{{ record.check_in }}</td>
+                <td>{{ record.check_out }}</td>
+                <td>{{ record.status }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</section>
+
+</main>
+
+<!-- Footer -->
+<footer>
+  <p>&copy; 2024 VisagFace. All rights reserved.</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,255 @@
+/* General Styles */
+/* Navbar styling */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 50px;
+  background-color: #016064;
+  padding: 0 20px; /* Optional: adds some space around the items */
+}
+
+.navbar .logo {
+  font-size: 24px;
+  color: white;
+  font-weight: bold;
+}
+
+.navbar .nav-links {
+  display: flex;
+  gap: 20px;
+}
+
+.navbar .nav-links a {
+  color: white;
+  text-decoration: none;
+  font-size: 16px;
+  padding: 10px;
+  transition: background-color 0.3s;
+}
+
+.navbar .nav-links a:hover {
+  background-color: #004d4d; /* Darker shade on hover */
+  border-radius: 5px;
+  font-size: 20px;
+}
+/* Hero Section */
+.hero {
+  background-color:#63C5DA  ;
+  height: 45vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: #fff;
+  position: relative;
+}
+.hero::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #63C5DA;
+  z-index: 1;
+}
+.hero-text {
+  z-index: 2;
+}
+.hero-text h1 {
+  font-size: 3rem;
+ 
+}
+.hero-text p {
+  font-size: 1.5rem;
+ 
+}
+.cta-btn {
+  background-color: #016064;
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  text-decoration: none;
+}
+.cta-btn:hover {
+  background-color: #01313c; 
+}
+
+/* Features Section */
+.features {
+  text-align: center;
+  padding: 40px 20px;
+  background-color: #fff;
+}
+.features h2 {
+  font-size: 2rem;
+  margin-bottom: 30px;
+}
+.feature-list {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.feature-item {
+  width: 300px;
+  background-color: #f4f8fb; /* Light blue-gray */
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+.feature-item:hover {
+  transform: translateY(-10px);
+}
+.feature-item img {
+  width: 100%;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+.feature-item h3 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+/* How It Works Section */
+.how-it-works {
+  background-color: #63C5DA; /* Light Blue */
+  color: #fff;
+  padding: 40px 20px;
+  text-align: center;
+}
+.how-it-works h2 {
+  font-size: 2rem;
+  margin-bottom: 30px;
+}
+.steps {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.step {
+  background-color: #fff;
+  color: #333;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 300px;
+}
+.step h3 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+/* Footer */
+footer {
+  background-color: #016064; /* Dark Teal */
+  color: #fff;
+  text-align: center;
+  padding: 10px;
+}
+
+/* Attendance Section */
+#attendance-section {
+  text-align: center;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  width: 90%;
+  max-width: 500px;
+  margin-left: 500px;
+}
+#attendance-id{
+  text-align: center;
+}
+
+#attendance-section h2 {
+  color: #333;
+  margin-bottom: 20px;
+}
+
+#attendance-form {
+  margin-bottom: 20px;
+}
+
+#attendance-form label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+#attendance-form input {
+  width: calc(100% - 20px);
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+#attendance-form button {
+  background-color: #016064;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+#attendance-form button:hover {
+  background-color:#01313c;
+}
+
+/* Video and Canvas */
+#video, #canvas {
+  margin: 20px auto;
+  display: block;
+  border: 2px solid #333;
+  border-radius: 10px;
+}
+
+/* Capture Face Button */
+#capture-face-btn {
+  background-color: #016064;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-left: 170px;
+}
+
+#capture-face-btn:hover {
+  background-color: #01313c;
+}
+
+/* Attendance Status */
+#attendance-status {
+  margin-top: 20px;
+  font-size: 16px;
+  color: #444;
+}
+
+/* Section Container */
+/* # */
+
+/* Helper styles for form validation */
+input.error {
+  border-color: #ff0000;
+}
+
+.error-message {
+  color: #ff0000;
+  font-size: 12px;
+}
+
+.success-message {
+  color: #28a745;
+  font-size: 14px;
+}

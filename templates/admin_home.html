@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VisagFace - Face Recognition Attendance System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <!-- Navbar -->
+  <header>
+    <div class="navbar">
+        <h1 style="color: white;">VisagFace</h1>
+        <nav>
+            <div class="nav-links">
+                <a href="#">Home</a>
+                <a href="{{ url_for('view_attendance') }}">Check Attendance</a>
+                <a href="{{ url_for('manage_leaves') }}">Check Request</a>
+                <a href="{{ url_for('register_employee') }}">New Registration</a>
+
+                <a href="#">Contact</a>
+            </div>
+        </nav>
+    </div>
+</header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-text">
+      <h1>Welcome to VisagFace</h1>
+      <p>Automate attendance with cutting-edge facial recognition technology.</p>
+      <a href="{{ url_for('register_employee') }}" class="cta-btn">Register here</a>
+      
+    </div>
+  </section>
+  
+
+  <!-- Features Section -->
+  <section class="features">
+    <h2>Features</h2>
+    <div class="feature-list">
+      <div class="feature-item">
+        <img src="{{ url_for('static', filename='images/clock.jpg') }}" alt="Quick Attendance">
+        <h3>Quick Attendance</h3>
+        <p>Effortlessly capture attendance within seconds.</p>
+      </div>
+      <div class="feature-item">
+        <img src="{{ url_for('static', filename='images/lock.jpg') }}" alt="secure access">
+
+        <h3>Secure Access</h3>
+        <p>Only authorized personnel can access the system.</p>
+      </div>
+      <div class="feature-item">
+        <img src="{{ url_for('static', filename='images/graph.jpg') }}" alt="Data Management">
+
+        <h3>Data Management</h3>
+        <p>Seamlessly manage attendance records and analytics.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section class="how-it-works">
+    <h2>How It Works</h2><br>
+    <div class="steps">
+      <div class="step">
+        <h3>Step 1: Register</h3>
+        <p>Create an account and register your face in the system.</p>
+      </div>
+      <div class="step">
+        <h3>Step 2: Capture Face</h3>
+        <p>Use the camera to capture your face for verification.</p>
+      </div>
+      <div class="step">
+        <h3>Step 3: Confirm Attendance</h3>
+        <p>Get instant confirmation of attendance status.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2024 VisagFace. All rights reserved.</p>
+  </footer>
+</body>
+</html>

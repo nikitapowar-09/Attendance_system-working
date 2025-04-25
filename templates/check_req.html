@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Check Requests</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<style>    
+table {
+  margin: 30px auto; 
+  width: 80%; 
+  border-collapse: collapse; 
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+table thead th {
+  background-color:  skyblue;
+      color: white; 
+  padding: 12px;
+  font-size: 18px;
+  border: 1px solid #ddd;
+}
+table tbody td {
+  padding: 12px;
+  text-align: center;
+  font-size: 16px;
+  color: #333;
+  border: 1px solid #ddd; 
+}
+table tbody tr:nth-child(odd) {
+  background-color: #f9f9f9;
+}
+table tbody tr:nth-child(even) {
+  background-color: #eafaea;
+}
+table tbody tr:hover {
+  background-color: #d3f9d8;
+}
+#headings {
+  text-align: center;
+  font-size: 28px;
+  color: #4caf50;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+</style>
+<body>
+  <header>
+    <div class="navbar">
+        <h1 style="color: white;">VisagFace</h1>
+        <nav>
+            <div class="nav-links">
+                <a href="{{ url_for('admin/dashboard') }}">Home</a>
+                <a href="{{ url_for('admin/view_attendance') }}">Check Attendance</a>
+                <a href="#">Check Request</a>
+                <a href="{{ url_for('admin/register_employee'') }}">New Registration</a>
+                <a href="#">Contact</a>
+            </div>
+        </nav>
+    </div>
+</header>
+
+<h2 style="text-align: center; margin-top: 50px;">Employee Leave Requests</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Employee Name</th>
+      <th>Leave Date</th>
+      <th>Reason</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody id="admin-leave-requests">
+  </tbody>
+</table>
+
+  <footer>
+    <p>&copy; 2024 VisagFace. All rights reserved.</p>
+  </footer>
+  <script>
+    const adminRequestsTable = document.getElementById("admin-leave-requests");
+
+let leaveRequests = [
+  { id: 1, name: "John Doe", date: "2024-12-10", reason: "Medical", status: "Pending" },
+  { id: 2, name: "Jane Smith", date: "2024-12-15", reason: "Vacation", status: "Pending" }
+];
+
+function renderAdminRequests() {
+  adminRequestsTable.innerHTML = ""; 
+  leaveRequests.forEach((request) => {
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td>${request.name}</td>
+      <td>${request.date}</td>
+      <td>${request.reason}</td>
+      <td>${request.status}</td>
+      <td>
+        <button class="accept-btn" onclick="updateRequestStatus(${request.id}, 'Accepted')">Accept</button>
+        <button class="reject-btn" onclick="updateRequestStatus(${request.id}, 'Rejected')">Reject</button>
+      </td>
+    `;
+    adminRequestsTable.appendChild(row);
+  });
+}
+
+function updateRequestStatus(id, newStatus) {
+  const request = leaveRequests.find(req => req.id === id);
+  if (request) {
+    request.status = newStatus;
+    alert(`Leave request ${newStatus}!`);
+    renderAdminRequests(); 
+    updateEmployeeView(request); 
+  }
+}
+
+function updateEmployeeView(updatedRequest) {
+  const employeeTable = document.getElementById("leave-requests");
+  const rows = employeeTable.getElementsByTagName("tr");
+
+  for (let row of rows) {
+    if (row.dataset.id == updatedRequest.id) {
+      row.querySelector(".status").textContent = updatedRequest.status;
+    }
+  }
+}
+
+renderAdminRequests();
+
+  </script>
+</body>
+</html>

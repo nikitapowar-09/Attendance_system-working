@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mark Attendance - VisagFace</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <!-- Navbar -->
+  <header>
+    <div class="navbar">
+      <h1 style="color: white;">VisagFace</h1>
+      <nav>
+        <div class="nav-links">
+          <a href="{{ url_for('employee_dashboard') }}">Home</a>
+          <a href="{{ url_for('view_attendance') }}">Calendar</a>
+          <a href="#">Attendance</a>
+          <a href="{{ url_for('request_leave') }}">Leave Request</a>
+          <a href="#">Contact</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Instructions Section -->
+  <section class="instructions" style="text-align: center; margin-bottom: 280px; padding: 30px; background-color: #f8f9fa; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+    <h2 style="font-size: 2rem; color: #333; margin-bottom: 20px;">Instructions:</h2>
+    <ol class="text-muted" style="font-size: 1.1rem; color: #555; list-style-position: inside; padding-left: 0;">
+      <li style="margin-bottom: 10px;">Click on the button below to open the camera and start marking attendance.</li>
+      <li style="margin-bottom: 10px;">Press <strong>'Q'</strong> to close the camera after attendance is marked.</li>
+    </ol>
+    <a href="/fr_attendance" class="btn btn-primary" style="display: inline-block; padding: 15px 25px; font-size: 1.2rem; background-color: #007bff; color: #fff; text-decoration: none; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 123, 255, 0.2); transition: background-color 0.3s;">
+      Start Marking Attendance
+    </a>
+</section>
+
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2024 VisagFace. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // Redirect to start camera function when button is clicked
+    document.getElementById("start-attendance").addEventListener("click", function() {
+      window.location.href = "{{ url_for('fr_attendance') }}";  // Trigger camera page (you need to create this route)
+    });
+  </script>
+</body>
+</html>

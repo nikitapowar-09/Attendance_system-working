@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leave Request</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    
+    /* Page Heading */
+    h1 {
+      text-align: center;
+      font-size: 28px;
+      color: white;
+      margin: 20px 0;
+    }
+
+    /* Form Styling */
+    form {
+      width: 50%;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    form label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #016064;
+    }
+    form input,
+    form textarea,
+    form button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    form textarea {
+      resize: none;
+    }
+    form button {
+      background-color: #016064;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    form button:hover {
+      background-color: #63C5DA;
+    }
+
+    /* Table Styling */
+    table {
+      margin: 30px auto;
+      width: 80%;
+      border-collapse: collapse;
+      background-color: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      margin-bottom: 150px;
+    }
+    table thead th {
+      background-color: #63C5DA;
+      color: #fff;
+      padding: 12px;
+      font-size: 18px;
+      border: 1px solid #ddd;
+    }
+    table tbody td {
+      padding: 12px;
+      text-align: center;
+      font-size: 16px;
+      color: #333;
+      border: 1px solid #ddd;
+    }
+    table tbody tr:nth-child(odd) {
+      background-color: #f9f9f9;
+    }
+    table tbody tr:nth-child(even) {
+      background-color: #eafaea;
+    }
+    table tbody tr:hover {
+      background-color: #d3f9d8;
+    }
+
+    /* Footer Styling */
+    footer {
+      text-align: center;
+      padding: 10px;
+      background-color: #016064;
+      color: white;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <header>
+    <div class="navbar">
+        <h1 style="color: white;">VisagFace</h1>
+        <nav>
+            <div class="nav-links">
+                <a href="{{ url_for('employee/dashboard') }}">Home</a>
+                <a href="{{ url_for('view_attendance') }}">Calender</a>
+                <a href="{{ url_for('fr_attendance') }}">Attendance</a>
+                <a href="#">Leave Request</a>
+                <a href="#">Contact</a>
+            </div>
+        </nav>
+    </div>
+</header>
+  <!-- Main Content -->
+  <main>
+    <h1 style="color: black;">Leave Request</h1>
+    <!-- Form to Submit a New Leave Request -->
+    <form id="leave-request-form" action="/employee/request_leave" method="POST">
+      <label for="leave-date">Leave Date</label>
+      <input type="date" id="leave-date" name="leave-date" required>
+      <label for="leave-reason">Reason:</label>
+      <textarea id="leave-reason" name="leave-reason" rows="4" required></textarea>
+      <button type="submit" style="background-color: #007BFF">Submit Leave Request</button>
+    </form>
+
+    <!-- Table to Display Leave Requests -->
+    <h2 id="headings" style="text-align: center;">Your Leave Requests</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Leave Date</th>
+          <th>Reason</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="leave-requests">
+        <!-- Leave requests will be populated here dynamically -->
+      </tbody>
+    </table>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2024 VisagFace. All rights reserved.</p>
+  </footer>
+
+</body>
+</html>
