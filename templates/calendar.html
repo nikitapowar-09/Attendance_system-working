@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <title>Attendance Calendar</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
       text-align: center;
       background: #f9f9f9;
     }
@@ -131,12 +130,12 @@
       <nav class="navbar">
         
         <div class="nav-links">
-          <a href="Home.html">Home</a>
-          <a href="#">Calendar</a>
-          <a href="attendance_1.html">Attendance</a>
-          <a href="leave.html">Leave Request</a>
-          <a href="#">Contact</a>
-        </div>
+          <a href="{{ url_for('employee_dashboard') }}">Home</a>
+          <a href="#">Calender</a>
+          <a href="{{ url_for('fr_attendance') }}">Attendance</a>
+          <a href="{{ url_for('request_holiday') }}">Leave Request</a>
+          <a href="{{ url_for('logout') }}">Logout</a>
+      </div>
       </nav>
     </div>
   </header>

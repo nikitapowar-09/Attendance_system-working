@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Check Requests</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <style>    
 table {
@@ -54,84 +54,54 @@ table tbody tr:hover {
         <h1 style="color: white;">VisagFace</h1>
         <nav>
             <div class="nav-links">
-                <a href="{{ url_for('admin/dashboard') }}">Home</a>
-                <a href="{{ url_for('admin/view_attendance') }}">Check Attendance</a>
+                <a href="{{ url_for('admin_dashboard') }}">Home</a>
+                <a href="{{ url_for('view_attendance') }}">Check Attendance</a>
                 <a href="#">Check Request</a>
-                <a href="{{ url_for('admin/register_employee'') }}">New Registration</a>
-                <a href="#">Contact</a>
+                <a href="{{ url_for('register_employee') }}">New Registration</a>
+                <a href="{{ url_for('logout') }}">Logout</a>
             </div>
         </nav>
     </div>
 </header>
 
 <h2 style="text-align: center; margin-top: 50px;">Employee Leave Requests</h2>
-<table>
-  <thead>
-    <tr>
-      <th>Employee Name</th>
-      <th>Leave Date</th>
-      <th>Reason</th>
-      <th>Status</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody id="admin-leave-requests">
-  </tbody>
-</table>
+<section class="requests-section">
+  {% if leaves %}
+  <table>
+    <thead>
+      <tr>
+        <th>Employee ID</th>
+        <th>Name</th>
+        <th>Date</th>
+        <th>Reason</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for leave in leaves %}
+        <tr>
+          <td>{{ leave.emp_id }}</td>
+          <td>{{ leave.name }}</td>
+          <td>{{ leave.leave_date }}</td>
+          <td>{{ leave.reason }}</td>
+          <td>{{ leave.status or "Pending" }}</td>
+          <td>
+            <a href="{{ url_for('approve_holiday', leave_id=leave.id) }}">Approve</a> |
+            <a href="{{ url_for('reject_holiday', leave_id=leave.id) }}">Reject</a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p>No leave requests found.</p>
+{% endif %}
+
+</section>
 
   <footer>
     <p>&copy; 2024 VisagFace. All rights reserved.</p>
   </footer>
-  <script>
-    const adminRequestsTable = document.getElementById("admin-leave-requests");
-
-let leaveRequests = [
-  { id: 1, name: "John Doe", date: "2024-12-10", reason: "Medical", status: "Pending" },
-  { id: 2, name: "Jane Smith", date: "2024-12-15", reason: "Vacation", status: "Pending" }
-];
-
-function renderAdminRequests() {
-  adminRequestsTable.innerHTML = ""; 
-  leaveRequests.forEach((request) => {
-    const row = document.createElement("tr");
-
-    row.innerHTML = `
-      <td>${request.name}</td>
-      <td>${request.date}</td>
-      <td>${request.reason}</td>
-      <td>${request.status}</td>
-      <td>
-        <button class="accept-btn" onclick="updateRequestStatus(${request.id}, 'Accepted')">Accept</button>
-        <button class="reject-btn" onclick="updateRequestStatus(${request.id}, 'Rejected')">Reject</button>
-      </td>
-    `;
-    adminRequestsTable.appendChild(row);
-  });
-}
-
-function updateRequestStatus(id, newStatus) {
-  const request = leaveRequests.find(req => req.id === id);
-  if (request) {
-    request.status = newStatus;
-    alert(`Leave request ${newStatus}!`);
-    renderAdminRequests(); 
-    updateEmployeeView(request); 
-  }
-}
-
-function updateEmployeeView(updatedRequest) {
-  const employeeTable = document.getElementById("leave-requests");
-  const rows = employeeTable.getElementsByTagName("tr");
-
-  for (let row of rows) {
-    if (row.dataset.id == updatedRequest.id) {
-      row.querySelector(".status").textContent = updatedRequest.status;
-    }
-  }
-}
-
-renderAdminRequests();
-
-  </script>
 </body>
 </html>

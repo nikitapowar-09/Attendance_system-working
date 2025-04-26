@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Register Here</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
+  <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}"> -->
   <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
 </head>
@@ -20,7 +20,7 @@
             <a href="{{ url_for('view_attendance') }}">Check Attendance</a>
             <a href="{{ url_for('manage_leaves') }}">Check Request</a>
             <a href="#">New Registration</a>
-            <a href="#">Contact</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
           </div>
         </nav>
     </div>
@@ -38,16 +38,18 @@
         2. Press <strong>'C'</strong> to capture the image.
       </p>
       {% endif %}
-
-      {% if temp_pic and session.img_captured %}
-      <img src="{{ url_for('static', filename='images/users/temp.jpg') }}?xxx={{session.dt}}" height="300" width="300">
-      {% else %}
-      <img src="{{ url_for('static', filename='images/no-image.png') }}?xxx={{ session.dt }}" height="300" width="300">
-      {% endif %}
-      <p class="text-muted">Employee Image</p>
-      {% if not session.img_captured %}
+      
+      {% if temp_pic %}
+      <img src="{{ url_for('static', filename='images/users/temp.jpg') }}?xxx={{ session['dt'] }}" height="300" width="300">
+  {% else %}
+      <img src="{{ url_for('static', filename='images/no-image.png') }}?xxx={{ session['dt'] }}" height="300" width="300">
+  {% endif %}
+  <p class="text-muted">Employee Image</p>
+  
+  {% if not session.get('img_captured') %}
       <a href="/capture_image" class="btn btn-lg btn-warning">Open Camera</a>
-      {% endif %}
+  {% endif %}
+  
     </div>
 
     <br><br>
@@ -113,15 +115,12 @@
   <script src="{{ url_for('static', filename='js/register.js') }}"></script>
   <script src="{{ url_for('static', filename='js/Camera.js') }}"></script>
   <script src="{{ url_for('static', filename='js/face-api.js-models-master/main.js') }}"></script>
-
-  <!-- SweetAlert2 CDN -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
   <script>
     // Send OTP
     document.getElementById("send-otp-btn").addEventListener("click", function() {
       const email = document.getElementById("email").value;
-
+  
       fetch("/verify", {
         method: "POST",
         headers: {
@@ -153,11 +152,11 @@
         console.error(error);
       });
     });
-
+  
     // Verify OTP
     document.getElementById("verify-otp-btn").addEventListener("click", function() {
       const otp = document.getElementById("otp").value;
-
+  
       fetch("/validate", {
         method: "POST",
         headers: {
@@ -207,7 +206,96 @@
           console.log("Error accessing the camera: ", error);
         });
     };
+  
+    // When the registration form is successfully submitted
+    document.querySelector('form').addEventListener('submit', function(event) {
+      event.preventDefault(); // Prevent the form from submitting the traditional way
+  
+      // Perform the fetch or AJAX request to submit the form data
+      fetch('/register_employee', {
+        method: 'POST',
+        body: new FormData(this)
+      })
+      .then(response => {
+        if (response.ok) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Employee Registered!',
+            text: 'The employee has been successfully registered.',
+            timer: 2000,
+            showConfirmButton: false
+          });
+  
+          // Reset the form after successful registration
+          resetForm();
+        } else {
+          throw new Error("Registration failed");
+        }
+      })
+      .catch(error => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error!',
+          text: 'Something went wrong. Please try again.',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        console.error(error);
+      });
+    });
+  
+    // Function to reset the form and clear image/video
+    function resetForm() {
+      // Reset the form fields
+      document.querySelector('form').reset();
+  
+      // Clear the image preview or captured video
+      const videoElement = document.getElementById('videoElement');
+      const imagePreview = document.getElementById('imagePreview');
+      
+      // Clear video stream (if camera was used)
+      if (videoElement && videoElement.srcObject) {
+        const stream = videoElement.srcObject;
+        const tracks = stream.getTracks();
+        tracks.forEach(track => track.stop());
+        videoElement.srcObject = null;
+      }
+  
+      // Clear the image preview
+      if (imagePreview) {
+        imagePreview.src = ''; // Remove the preview image source
+      }
+  
+      // If there's a file input, reset it
+      const fileInput = document.querySelector('input[type="file"]');
+      if (fileInput) {
+        fileInput.value = ''; // Reset file input
+      }
+    }
+  
+    // Call resetForm on page load to ensure initial state
+    window.addEventListener('load', resetForm);
+
+  function resetCapturedImage() {
+    // Clear the image preview
+    const imagePreview = document.getElementById('imagePreview');
+    if (imagePreview) {
+      imagePreview.src = '';  // Clear the preview image source
+    }
+
+    // Stop the video stream if it's playing (optional)
+    const videoElement = document.getElementById('videoElement');
+    if (videoElement && videoElement.srcObject) {
+      const stream = videoElement.srcObject;
+      const tracks = stream.getTracks();
+      tracks.forEach(track => track.stop()); // Stop all tracks of the stream
+      videoElement.srcObject = null; // Reset the video stream
+    }
+}
+
   </script>
+  
+  
   
   <!-- Bootstrap JS and Popper JS -->
   <script src="{{ url_for('static', filename='jquery-3.2.1.slim.min.js') }}" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>

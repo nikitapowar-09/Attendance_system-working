@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from models import OTPVerification
+from models import OTPVerification, AdminLeaveApproval
 from flask_mail import Message, Mail
 from utils.email_utils import generate_otp, send_otp_email
 import random
@@ -56,43 +56,11 @@ def is_employee_logged_in(f):
             return redirect(url_for('employee_login'))
     return wrap
 
-@app.route('/verify', methods=["POST"])
-def verify():
-    email = request.form["email"]
-    otp = send_otp_email(email)
-    if otp:
-        session['otp'] = otp
-        session['email'] = email
-        return "OTP sent"
-    else:
-        return "Error sending OTP", 500
 
-@app.route('/validate', methods=["POST"])
-def validate():
-    entered_otp = request.form["otp"]
-    if entered_otp == session.get("otp"):
-        return f"<span style='color:green;'>✅ OTP Verified for {session.get('email')}</span>"
-    else:
-        return "<span style='color:red;'>❌ Invalid OTP</span>"
-
-
-@app.route('/set_password', methods=['POST'])
-def set_password():
-    email = request.form['email']
-    password = generate_password_hash(request.form['password'])
-
-    # Continue with name, phone, image etc. if needed
-    employee = Employee(email=email, password=password)
-    db.session.add(employee)
-    db.session.commit()
-
-    flash("Registration complete!", "success")
-    return redirect(url_for('admin_dashboard'))
-
-# ---------------- EMPLOYEE ROUTES ---------------- #
 @app.route('/')
 def landing_page():
     return render_template('welcome.html')
+
 
 @app.route('/employee_login', methods=['GET', 'POST'])
 def employee_login():
@@ -110,6 +78,7 @@ def employee_login():
 
         if user and check_password_hash(user.password, password):
             login_user(user)
+            session['emp_id'] = user.emp_id  
             return redirect(url_for('employee_dashboard'))
         else:
             flash("Invalid credentials", "error")
@@ -122,51 +91,6 @@ def employee_dashboard():
     if not isinstance(current_user, Employee):
         return redirect(url_for('employee_login'))  # Prevent admins from accessing employee page
     return render_template('employee_home.html', name=current_user.name)
-
-
-# @app.route('/attendance', methods=['POST'])
-# def attendance():
-#     selected_date = request.form.get('selected_date')
-#     selected_date_obj = datetime.strptime(selected_date, '%Y-%m-%d')
-#     formatted_date = selected_date_obj.strftime('%Y-%m-%d')
-
-#     # Connect to your actual database
-#     conn = sqlite3.connect('database.db')
-#     cursor = conn.cursor()
-
-#     # Query the 'attendance' table from the actual database
-#     cursor.execute("SELECT name, time FROM attendance WHERE date = ?", (formatted_date,))
-#     attendance_data = cursor.fetchall()
-
-#     conn.close()
-
-#     # If no data found, pass a flag to the template
-#     if not attendance_data:
-#         return render_template('new_emp_register.html', selected_date=selected_date, no_data=True)
-    
-#     # Pass attendance data to the same template
-#     return render_template('new_emp_register.html', selected_date=selected_date, attendance_data=attendance_data)
-
-@app.route('/employee/request_leave', methods=['POST'])
-@login_required
-def request_leave():
-    leave_date = datetime.strptime(request.form.get('leave_date'), "%Y-%m-%d").date()
-    reason = request.form.get('reason')
-
-    new_leave = LeaveRequest(emp_id=current_user.id, name=current_user.name, leave_date=leave_date, reason=reason)
-    db.session.add(new_leave)
-    db.session.commit()
-
-    flash("Leave request submitted!", "success")
-    return redirect(url_for('employee_dashboard'))
-
-@app.route('/employee/logout')
-@login_required
-def employee_logout():
-    logout_user()
-    return redirect(url_for("employee_login"))
-
-# ---------------- ADMIN ROUTES ---------------- #
 
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
@@ -198,57 +122,18 @@ def admin_dashboard():
     admin = Admin.query.filter_by(admin_id=session["admin_id"]).first()
     return render_template('admin_home.html', username=admin.username)
 
-@app.route('/view_attendance', methods=['GET', 'POST'])
-def view_attendance():
-    if "admin_id" not in session:
-        return jsonify({"message": "Unauthorized"}), 403
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('landing_page'))
 
-    selected_date = request.form.get("selected_date")
-    if selected_date:
-        # Convert selected date to a datetime object
-        selected_date = datetime.strptime(selected_date, "%Y-%m-%d").date()
-
-        # Filter records by the selected date
-        attendance_records = Attendance.query.filter_by(date=selected_date).all()
-        if not attendance_records:
-            no_data = True
-        else:
-            no_data = False
-
-        return render_template('check_att.html', records=attendance_records, selected_date=selected_date, no_data=no_data)
-    else:
-        # Show all attendance records by default if no date is selected
-        attendance_records = Attendance.query.all()
-        return render_template('check_att.html', records=attendance_records, no_data=False)
-
-@app.route('/manage_leaves', methods=['GET', 'POST'])
-def manage_leaves():
-    if "admin_id" not in session:
-        return jsonify({"message": "Unauthorized"}), 403
-
-    if request.method == 'GET':
-        leave_requests = LeaveRequest.query.all()
-        return jsonify([{
-            "id": req.id,
-            "emp_id": req.emp_id,
-            "name": req.name,
-            "leave_date": str(req.leave_date),
-            "reason": req.reason,
-            "status": req.status
-        } for req in leave_requests])
-
-    elif request.method == 'POST':
-        data = request.json
-        leave_id = data.get('id')
-        action = data.get('action')  # Accept or Reject
-
-        leave = LeaveRequest.query.get(leave_id)
-        if leave:
-            leave.status = action
-            db.session.commit()
-            return jsonify({"message": f"Leave {action} successfully"}), 200
-        return jsonify({"message": "Leave request not found"}), 404
-
+@app.route('/calendar')
+def calendar():
+    return render_template('calendar.html')
+ 
+# --------------register-------------
 @app.route('/register_employee', methods=['GET', 'POST'])
 def register_employee():
     if request.method == 'POST':
@@ -284,10 +169,11 @@ def register_employee():
                     )
 
                 # Remove session data if image was captured
-                if 'img_captured' in session:
-                    session.pop('img_captured')
-
-                return render_template('new_emp_register.html')
+                session.pop('img_captured', None)  # Clear img_captured session variable
+                session.pop('dt', None)  # Clear datetime session variable (optional)
+                
+                # Return to initial form state
+                return redirect(url_for('register_employee'))
 
             except Exception as e:
                 # Rollback in case of any error during commit
@@ -332,33 +218,49 @@ def capture_image():
 
     return redirect(url_for('register_employee'))
 
-@app.route('/admin/register_admin', methods=['GET','POST'])
-@is_admin_logged_in
-def register_admin():
-    if request.method == 'POST':
-        data = Admin.query.filter_by(email=request.form['email']).first()
-        if 'isAdmin' in request.form:
-            is_admin = True
-        else:
-            is_admin = False
-        # if email does not already exist
-        if data is None:
-            admin = Admin(
-                username = data.get('username'),
-                password = generate_password_hash(data.get('password')),
-                last_admin = Admin.query.order_by(Admin.id.desc()).first(),
-                is_admin=is_admin,
-                registered_on=datetime.now()
-            )
-            db.session.add(admin)
-            db.session.commit()
+@app.route('/verify', methods=["POST"])
+def verify():
+    email = request.form["email"]
+    otp = send_otp_email(email)
+    if otp:
+        session['otp'] = otp
+        session['email'] = email
+        return "OTP sent"
+    else:
+        return "Error sending OTP", 500
 
-            flash("Admin registered successfully!", "success")
-            return redirect(url_for('admin_dashboard'))
-        else:
-            flash('Admin with this email already exists!', 'danger')
-    return render_template('register_admin.html')
+@app.route('/validate', methods=["POST"])
+def validate():
+    entered_otp = request.form["otp"]
+    if entered_otp == session.get("otp"):
+        return f"<span style='color:green;'>✅ OTP Verified for {session.get('email')}</span>"
+    else:
+        return "<span style='color:red;'>❌ Invalid OTP</span>"
+     
+# -----------------Attendance-------------
+@app.route('/view_attendance', methods=['GET', 'POST'])
+def view_attendance():
+    if "admin_id" not in session:
+        return jsonify({"message": "Unauthorized"}), 403
 
+    selected_date = request.form.get("selected_date")
+    if selected_date:
+        # Convert selected date to a datetime object
+        selected_date = datetime.strptime(selected_date, "%Y-%m-%d").date()
+
+        # Filter records by the selected date
+        attendance_records = Attendance.query.filter_by(date=selected_date).all()
+        if not attendance_records:
+            no_data = True
+        else:
+            no_data = False
+
+        return render_template('check_att.html', records=attendance_records, selected_date=selected_date, no_data=no_data)
+    else:
+        # Show all attendance records by default if no date is selected
+        attendance_records = Attendance.query.all()
+        return render_template('check_att.html', records=attendance_records, no_data=False)
+    
 @app.route('/fr_attendance')
 def fr_attendance():
     video_capture = VideoCapture(0)
@@ -482,3 +384,110 @@ def attendance_success():
 @app.route('/attendance_failed')
 def attendance_failed():
     return "❌ Face not recognized. Please try again."
+
+# ------------leaves----------------
+@app.route('/leave_form')
+def leave_form():
+    # Fetch the latest leave requests for the employee
+    emp_id = session.get('emp_id')  # Assuming you have employee logged in and session stores emp_id
+    if emp_id:
+        all_requests = AdminLeaveApproval.query.filter_by(emp_id=emp_id).order_by(AdminLeaveApproval.leave_date.desc()).all()
+    else:
+        all_requests = []
+    return render_template('send_leave_req.html', requests=all_requests)
+ # create this file in templates folder
+
+@app.route('/request_holiday', methods=['POST'])
+def request_holiday():
+    emp_id = request.form['emp_id']
+    name = request.form['name']
+    start_date = request.form['start_date']
+    end_date = request.form['end_date']
+    reason = request.form['reason']
+
+    start_date_obj = datetime.strptime(start_date, "%Y-%m-%d").date()
+    end_date_obj = datetime.strptime(end_date, "%Y-%m-%d").date()
+
+    current_date = start_date_obj
+    while current_date <= end_date_obj:
+        leave = AdminLeaveApproval(
+            emp_id=emp_id,
+            name=name,
+            leave_date=current_date,
+            reason=reason
+        )
+        db.session.add(leave)
+        current_date += timedelta(days=1)
+
+    db.session.commit()
+    return redirect(url_for('leave_form'))  # <<< Redirect instead of re-render
+
+  
+@app.route('/approve_holiday/<int:leave_id>')
+def approve_holiday(leave_id):
+    leave = AdminLeaveApproval.query.get_or_404(leave_id)
+    leave.status = 'Approved'
+    leave.action = 'Approved'
+    db.session.commit()
+    return redirect(url_for('manage_leaves'))
+
+@app.route('/reject_holiday/<int:leave_id>')
+def reject_holiday(leave_id):
+    leave = AdminLeaveApproval.query.get_or_404(leave_id)
+    leave.status = 'Rejected'
+    leave.action = 'Rejected'
+    db.session.commit()
+    return redirect(url_for('manage_leaves'))
+
+@app.route('/view_leave_status')
+@login_required
+def view_leave_status():
+    emp_id = session.get('emp_id')
+    leaves = AdminLeaveApproval.query.filter_by(emp_id=emp_id).all()
+    return render_template('view_leave_status.html', leaves=leaves)
+
+@app.route('/manage_leaves')
+def manage_leaves():
+    leaves = AdminLeaveApproval.query.order_by(AdminLeaveApproval.leave_date.desc()).all()
+    return render_template('check_req.html', leaves=leaves)
+
+@app.route('/admin/register_admin', methods=['GET','POST'])
+@is_admin_logged_in
+def register_admin():
+    if request.method == 'POST':
+        data = Admin.query.filter_by(email=request.form['email']).first()
+        if 'isAdmin' in request.form:
+            is_admin = True
+        else:
+            is_admin = False
+        # if email does not already exist
+        if data is None:
+            admin = Admin(
+                username = data.get('username'),
+                password = generate_password_hash(data.get('password')),
+                last_admin = Admin.query.order_by(Admin.id.desc()).first(),
+                is_admin=is_admin,
+                registered_on=datetime.now()
+            )
+            db.session.add(admin)
+            db.session.commit()
+
+            flash("Admin registered successfully!", "success")
+            return redirect(url_for('admin_dashboard'))
+        else:
+            flash('Admin with this email already exists!', 'danger')
+    return render_template('register_admin.html')
+
+
+@app.route('/set_password', methods=['POST'])
+def set_password():
+    email = request.form['email']
+    password = generate_password_hash(request.form['password'])
+
+    # Continue with name, phone, image etc. if needed
+    employee = Employee(email=email, password=password)
+    db.session.add(employee)
+    db.session.commit()
+
+    flash("Registration complete!", "success")
+    return redirect(url_for('admin_dashboard'))
