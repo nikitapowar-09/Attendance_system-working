@@ -14,10 +14,10 @@
       <nav>
         <div class="nav-links">
           <a href="{{ url_for('employee_dashboard') }}">Home</a>
-          <a href="{{ url_for('view_attendance') }}">Calendar</a>
-          <a href="#">Attendance</a>
-          <a href="{{ url_for('request_leave') }}">Leave Request</a>
-          <a href="#">Contact</a>
+          <a href="{{ url_for('calendar') }}">Calendar</a>
+                <a href="{{ url_for('attendance_page') }}">Attendance</a>
+                <a href="{{ url_for('leave_form') }}">Leave Request</a>
+                <a href="{{ url_for('logout') }}">Logout</a>
         </div>
       </nav>
     </div>
@@ -30,9 +30,17 @@
       <li style="margin-bottom: 10px;">Click on the button below to open the camera and start marking attendance.</li>
       <li style="margin-bottom: 10px;">Press <strong>'Q'</strong> to close the camera after attendance is marked.</li>
     </ol>
-    <a href="/fr_attendance" class="btn btn-primary" style="display: inline-block; padding: 15px 25px; font-size: 1.2rem; background-color: #007bff; color: #fff; text-decoration: none; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 123, 255, 0.2); transition: background-color 0.3s;">
+    <!-- <a href="/fr_attendance" class="btn btn-primary" style="display: inline-block; padding: 15px 25px; font-size: 1.2rem; background-color: #007bff; color: #fff; text-decoration: none; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 123, 255, 0.2); transition: background-color 0.3s;">
       Start Marking Attendance
+    </a> -->
+    <a href="/checkin" class="btn btn-success" style="display: inline-block; padding: 15px 25px; font-size: 1.2rem; background-color: #28a745; color: #fff; text-decoration: none; border-radius: 8px; box-shadow: 0 4px 6px rgba(40, 167, 69, 0.2); transition: background-color 0.3s; margin-right: 20px;">
+      Check In
     </a>
+    
+    <a href="/checkout" class="btn btn-danger" style="display: inline-block; padding: 15px 25px; font-size: 1.2rem; background-color: #dc3545; color: #fff; text-decoration: none; border-radius: 8px; box-shadow: 0 4px 6px rgba(220, 53, 69, 0.2); transition: background-color 0.3s;">
+      Check Out
+    </a>
+    
 </section>
 
 
@@ -44,7 +52,7 @@
   <script>
     // Redirect to start camera function when button is clicked
     document.getElementById("start-attendance").addEventListener("click", function() {
-      window.location.href = "{{ url_for('fr_attendance') }}";  // Trigger camera page (you need to create this route)
+      window.location.href = "{{ url_for('attendance_page') }}";  // Trigger camera page (you need to create this route)
     });
   </script>
 </body>

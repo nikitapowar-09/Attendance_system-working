@@ -261,21 +261,133 @@ def view_attendance():
         attendance_records = Attendance.query.all()
         return render_template('check_att.html', records=attendance_records, no_data=False)
     
-@app.route('/fr_attendance')
-def fr_attendance():
-    video_capture = VideoCapture(0)
+# @app.route('/fr_attendance')
+# def fr_attendance():
+#     video_capture = VideoCapture(0)
+
+#     known_face_encodings = []
+#     known_face_names = []
+#     known_faces_filenames = []
+
+#     for (dirpath, dirnames, filenames) in os.walk('static/images/users'):
+#         known_faces_filenames.extend(filenames)
+#         break
+
+#     for filename in known_faces_filenames:
+#         face = face_recognition.load_image_file('static/images/users/' + filename)
+#         known_face_names.append(filename[:-4])  # Remove extension
+#         known_face_encodings.append(face_recognition.face_encodings(face)[0])
+
+#     face_locations = []
+#     face_encodings = []
+#     face_names = []
+#     process_this_frame = True
+
+#     while True:
+#         frame = video_capture.read()
+
+#         if process_this_frame:
+#             face_locations = face_recognition.face_locations(frame)
+#             face_encodings = face_recognition.face_encodings(frame, face_locations)
+#             face_names = []
+
+#             flag = False
+#             marked_ids = set()
+#             for face_encoding in face_encodings:
+#                 matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
+#                 emp_info = "Unknown"
+
+#                 face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
+#                 best_match_index = np.argmin(face_distances)
+
+#                 if matches[best_match_index]:
+#                     emp_info = known_face_names[best_match_index]  # E.g., "E101-Rahul"
+#                     emp_id, emp_name = emp_info.split('-')
+
+#                     if '-' in emp_info:
+#                         emp_id, emp_name = emp_info.split('-')  # Split into emp_id and emp_name
+#                     else:
+#                         # Handle the case where the format is not as expected (e.g., "Unknown")
+#                         emp_id = emp_name = "Unknown"  # Or take other appropriate action (skip, log error, etc.)
+
+#                     today = datetime.today().date()
+#                     exists = Attendance.query.filter_by(emp_id=emp_id, name=emp_name,  check_in=datetime.today().date()).first()
+
+#                     if not exists:
+#                         attendance = Attendance(
+#                             emp_id=emp_id,
+#                             name=emp_name,
+#                             status="present",
+#                             date=datetime.today().date(),
+#                             check_in=datetime.now().time()
+#                         )
+#                         db.session.add(attendance)
+#                         db.session.commit()
+#                         flag = True
+#                         flash(f"Attendance marked successfully for {emp_name}", "success")
+#                     else:
+#                         flash(f"Attendance already marked for {emp_name} today.", "warning")
+#                 face_names.append(emp_info)
+
+#         process_this_frame = not process_this_frame
+
+#         for (top, right, bottom, left), emp_info in zip(face_locations, face_names):
+#             cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
+#             font = cv2.FONT_HERSHEY_DUPLEX
+#             cv2.putText(frame, emp_info, (left + 6, bottom - 6), font, 0.5, (255, 255, 255), 1)
+#             if flag:
+#                 cv2.putText(frame, 'Marked', (left + 12, bottom - 12), font, 0.5, (0, 255, 0), 1)
+
+#         cv2.imshow('Employee Attendance', frame)
+
+#         if cv2.waitKey(1) & 0xFF == ord('q'):
+#             break
+
+#     video_capture.release()
+#     cv2.destroyAllWindows()
+#     return redirect(url_for('mark_attendance' ))
+
+# @app.route('/mark_attendance', methods=['POST'])
+# def mark_attendance():
+#     emp_id = request.form['emp_id']
+#     name = request.form['name']
+#     today = date.today()
+
+#     # Check if attendance already exists
+#     existing_attendance = Attendance.query.filter_by(emp_id=emp_id, date=today).first()
+
+#     if existing_attendance:
+#         flash("Your attendance is already marked for today.", "warning")
+#     else:
+#         check_in_time = datetime.now().time()
+#         new_attendance = Attendance(
+#             emp_id=emp_id,
+#             name=name,
+#             date=today,
+#             check_in=check_in_time,
+#             status='present'
+#         )
+#         db.session.add(new_attendance)
+#         db.session.commit()
+#         flash("Attendance marked successfully!", "success")
+
+#     return redirect(url_for('attendance_page')) 
+@app.route('/checkin')
+def checkin():
+    video_capture = cv2.VideoCapture(0)
 
     known_face_encodings = []
     known_face_names = []
     known_faces_filenames = []
 
+    # Load known faces
     for (dirpath, dirnames, filenames) in os.walk('static/images/users'):
         known_faces_filenames.extend(filenames)
         break
 
     for filename in known_faces_filenames:
         face = face_recognition.load_image_file('static/images/users/' + filename)
-        known_face_names.append(filename[:-4])  # Remove extension
+        known_face_names.append(filename[:-4])  # Remove .jpg/.png extension
         known_face_encodings.append(face_recognition.face_encodings(face)[0])
 
     face_locations = []
@@ -284,7 +396,10 @@ def fr_attendance():
     process_this_frame = True
 
     while True:
-        frame = video_capture.read()
+        ret, frame = video_capture.read()
+
+        if not ret:
+            break
 
         if process_this_frame:
             face_locations = face_recognition.face_locations(frame)
@@ -292,86 +407,168 @@ def fr_attendance():
             face_names = []
 
             flag = False
-            marked_ids = set()
+
             for face_encoding in face_encodings:
                 matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
-                emp_info = "Unknown"
+                emp_info = "Unknown"  # Default to Unknown
 
+                # Get the face distance and identify the best match
                 face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
                 best_match_index = np.argmin(face_distances)
 
                 if matches[best_match_index]:
-                    emp_info = known_face_names[best_match_index]  # E.g., "E101-Rahul"
-                    emp_id, emp_name = emp_info.split('-')
+                    emp_info = known_face_names[best_match_index]  # e.g., "E101-Rahul"
 
+                    # Split employee ID and name from the filename (if applicable)
                     if '-' in emp_info:
-                        emp_id, emp_name = emp_info.split('-')  # Split into emp_id and emp_name
+                        emp_id, emp_name = emp_info.split('-')
                     else:
-                        # Handle the case where the format is not as expected (e.g., "Unknown")
-                        emp_id = emp_name = "Unknown"  # Or take other appropriate action (skip, log error, etc.)
+                        emp_id = emp_name = "Unknown"
 
-                    today = datetime.today().date()
-                    exists = Attendance.query.filter_by(emp_id=emp_id, name=emp_name,  check_in=datetime.today().date()).first()
+                    # Get today's date
+                    today = date.today()
+
+                    # Check if the employee already has an attendance record for today
+                    exists = Attendance.query.filter_by(emp_id=emp_id, date=today).first()
 
                     if not exists:
+                        # Add attendance record if not already present
                         attendance = Attendance(
                             emp_id=emp_id,
                             name=emp_name,
-                            status="present",
-                            date=datetime.today().date(),
-                            check_in=datetime.now().time()
+                            date=today,
+                            check_in=datetime.now().time(),
+                            status="present"
                         )
                         db.session.add(attendance)
                         db.session.commit()
                         flag = True
-                        flash(f"Attendance marked successfully for {emp_name}", "success")
+                        flash(f"Check-In successful for {emp_name}", "success")
                     else:
-                        flash(f"Attendance already marked for {emp_name} today.", "warning")
+                        flash(f"Already Checked-In today: {emp_name}", "warning")
+                else:
+                    emp_info = "Unknown"  # If no match is found, mark it as Unknown
+
                 face_names.append(emp_info)
 
         process_this_frame = not process_this_frame
 
+        # Draw face rectangles and display names
         for (top, right, bottom, left), emp_info in zip(face_locations, face_names):
             cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
             font = cv2.FONT_HERSHEY_DUPLEX
             cv2.putText(frame, emp_info, (left + 6, bottom - 6), font, 0.5, (255, 255, 255), 1)
+
             if flag:
-                cv2.putText(frame, 'Marked', (left + 12, bottom - 12), font, 0.5, (0, 255, 0), 1)
+                cv2.putText(frame, 'Checked-In', (left + 6, bottom - 25), font, 0.5, (0, 255, 0), 1)
 
-        cv2.imshow('Employee Attendance', frame)
+        # Show the video stream
+        cv2.imshow('Employee Check-In', frame)
 
+        # Quit on pressing 'q'
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
     video_capture.release()
     cv2.destroyAllWindows()
-    return redirect(url_for('mark_attendance' ))
 
-@app.route('/mark_attendance', methods=['POST'])
-def mark_attendance():
-    emp_id = request.form['emp_id']
-    name = request.form['name']
-    today = date.today()
+    return redirect(url_for('attendance_page'))
 
-    # Check if attendance already exists
-    existing_attendance = Attendance.query.filter_by(emp_id=emp_id, date=today).first()
+@app.route('/checkout')
+def checkout():
+    video_capture = cv2.VideoCapture(0)
 
-    if existing_attendance:
-        flash("Your attendance is already marked for today.", "warning")
-    else:
-        check_in_time = datetime.now().time()
-        new_attendance = Attendance(
-            emp_id=emp_id,
-            name=name,
-            date=today,
-            check_in=check_in_time,
-            status='present'
-        )
-        db.session.add(new_attendance)
-        db.session.commit()
-        flash("Attendance marked successfully!", "success")
+    known_face_encodings = []
+    known_face_names = []
+    known_faces_filenames = []
 
-    return redirect(url_for('employee_home')) 
+    # Load known faces
+    for (dirpath, dirnames, filenames) in os.walk('static/images/users'):
+        known_faces_filenames.extend(filenames)
+        break
+
+    for filename in known_faces_filenames:
+        face = face_recognition.load_image_file('static/images/users/' + filename)
+        known_face_names.append(filename[:-4])  # Remove .jpg/.png extension
+        known_face_encodings.append(face_recognition.face_encodings(face)[0])
+
+    face_locations = []
+    face_encodings = []
+    face_names = []
+    process_this_frame = True
+
+    while True:
+        ret, frame = video_capture.read()
+
+        if not ret:
+            break
+
+        if process_this_frame:
+            face_locations = face_recognition.face_locations(frame)
+            face_encodings = face_recognition.face_encodings(frame, face_locations)
+            face_names = []
+
+            flag = False
+
+            for face_encoding in face_encodings:
+                matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
+                emp_info = "Unknown"  # Default to "Unknown" if no match is found
+
+                # Get the face distance and identify the best match
+                face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
+                best_match_index = np.argmin(face_distances)
+
+                if matches[best_match_index]:
+                    emp_info = known_face_names[best_match_index]  # e.g., "E101-Rahul"
+
+                    # Split employee ID and name from the filename (if applicable)
+                    if '-' in emp_info:
+                        emp_id, emp_name = emp_info.split('-')
+                    else:
+                        emp_id = emp_name = "Unknown"
+
+                    # Get today's date
+                    today = date.today()
+
+                    # Check if the employee has checked in today
+                    attendance_record = Attendance.query.filter_by(emp_id=emp_id, date=today).first()
+
+                    if attendance_record:
+                        # Update check-out time if the employee is already checked in
+                        attendance_record.check_out = datetime.now().time()
+                        db.session.commit()
+                        flag = True
+                        flash(f"Check-Out successful for {emp_name}", "success")
+                    else:
+                        flash(f"Please Check-In first!", "warning")
+                else:
+                    emp_info = "Unknown"  # If no match is found, mark it as Unknown
+
+                face_names.append(emp_info)
+
+        process_this_frame = not process_this_frame
+
+        # Draw face rectangles and display names
+        for (top, right, bottom, left), emp_info in zip(face_locations, face_names):
+            cv2.rectangle(frame, (left, top), (right, bottom), (255, 0, 0), 2)
+            font = cv2.FONT_HERSHEY_DUPLEX
+            cv2.putText(frame, emp_info, (left + 6, bottom - 6), font, 0.5, (255, 255, 255), 1)
+
+            if flag:
+                cv2.putText(frame, 'Checked-Out', (left + 6, bottom - 25), font, 0.5, (255, 0, 0), 1)
+
+        # Show the video stream
+        cv2.imshow('Employee Check-Out', frame)
+
+        # Quit on pressing 'q'
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    video_capture.release()
+    cv2.destroyAllWindows()
+
+    return redirect(url_for('attendance_page'))
+
 
 @app.route('/attendance_page')
 def attendance_page():
@@ -451,6 +648,7 @@ def manage_leaves():
     leaves = AdminLeaveApproval.query.order_by(AdminLeaveApproval.leave_date.desc()).all()
     return render_template('check_req.html', leaves=leaves)
 
+# -------------------other----------
 @app.route('/admin/register_admin', methods=['GET','POST'])
 @is_admin_logged_in
 def register_admin():

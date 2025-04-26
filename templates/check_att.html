@@ -41,7 +41,6 @@
     #headings {
       text-align: center;
       font-size: 28px;
-      color: #4caf50;
       margin-bottom: 20px;
       font-weight: bold;
     }
@@ -75,9 +74,10 @@
     <!-- Date Selection Form -->
     <div class="centered-form">
         <form action="{{ url_for('view_attendance') }}" method="POST">
-            <label for="selected_date">Select Date: </label>
-            <input type="date" id="selected_date" name="selected_date" required value="{{ selected_date }}">
-            <button type="submit" class="btn btn-outline-success">Show Attendance</button>
+          <label for="selected_date">Select Date: </label>
+          <input type="date" id="selected_date" name="selected_date" required value="{{ selected_date }}" style=" background-color: #28a745; color: white; padding: 10px 20px; border-radius: 5px; border: none; font-size: 12px; cursor: pointer; transition: background-color 0.3s ease;"">
+          <button type="submit" class="btn btn-outline-success" style="background-color: #28a745; color: white; padding: 10px 20px; border-radius: 5px; border: none; font-size: 12px; cursor: pointer; transition: background-color 0.3s ease;">
+          Show Attendance</button>
         </form>
     </div>
 

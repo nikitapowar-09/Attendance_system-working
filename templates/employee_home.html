@@ -16,7 +16,7 @@
             <div class="nav-links">
                 <a href="#">Home</a>
                 <a href="{{ url_for('calendar') }}">Calendar</a>
-                <a href="{{ url_for('fr_attendance') }}">Attendance</a>
+                <a href="{{ url_for('attendance_page') }}">Attendance</a>
                 <a href="{{ url_for('leave_form') }}">Leave Request</a>
                 <a href="{{ url_for('logout') }}">Logout</a>
             </div>
@@ -29,7 +29,7 @@
     <div class="hero-text" style="background-color: #63C5DA;">
       <h1>Welcome to VisagFace</h1>
       <p>Automate attendance with cutting-edge facial recognition technology.</p>
-      <a href="attendance_1.html" class="cta-btn">Mark Attendance</a>
+      <a href="{{ url_for('attendance_page') }}" class="cta-btn">Mark Attendance</a>
     </div>
   </section>
 
