@@ -116,15 +116,16 @@
     </div>
 </header>
   <!-- Main Content -->
+  
   <main>
+
     <h1 style="color: black;">Leave Request</h1>
     <section class="form-section">
       <form action="/request_holiday" method="POST">
-          <input type="hidden" name="emp_id" value="{{ session['emp_id'] }}">
 
+          <input type="hidden" name="emp_id" value="{{ session['emp_id'] }}">
           <label for="emp_id">Employee ID:</label>
-          <input type="text" id="emp_id" name="emp_id" required>
-          <br>
+         <br>
           <label for="name">Name:</label>
           <input type="text" id="name" name="name" required>
           <br>
@@ -151,4 +152,5 @@
   </footer>
 
 </body>
+
 </html>

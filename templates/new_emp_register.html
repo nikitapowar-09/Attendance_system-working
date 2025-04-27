@@ -3,11 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Register Here</title>
+  <title>Register Employee</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}"> -->
   <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
 </head>
 <body>
   <!-- Navbar -->
@@ -19,7 +17,7 @@
             <a href="{{ url_for('admin_dashboard') }}">Home</a>
             <a href="{{ url_for('view_attendance') }}">Check Attendance</a>
             <a href="{{ url_for('manage_leaves') }}">Check Request</a>
-            <a href="#">New Registration</a>
+            <a href="{{ url_for('capture_image') }}">Capture Face</a>
             <a href="{{ url_for('logout') }}">Logout</a>
           </div>
         </nav>
@@ -28,46 +26,60 @@
 
   <!-- Registration Section -->
   <section id="register-section" class="container mt-5" style="max-width: 900px; text-align: center; background-color: #ffffff; border-radius: 12px; padding: 30px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);">
-    <h4 class="text-center">Register an Employee</h4>
-
-    <div class="text-center">
-      {% if not session.img_captured %}
-      <p class="text-muted">
-        Instructions:<br>
-        1. Click the button below to open the camera.<br>
-        2. Press <strong>'C'</strong> to capture the image.
-      </p>
-      {% endif %}
-      
-      {% if temp_pic %}
-      <img src="{{ url_for('static', filename='images/users/temp.jpg') }}?xxx={{ session['dt'] }}" height="300" width="300">
-  {% else %}
-      <img src="{{ url_for('static', filename='images/no-image.png') }}?xxx={{ session['dt'] }}" height="300" width="300">
-  {% endif %}
-  <p class="text-muted">Employee Image</p>
-  
-  {% if not session.get('img_captured') %}
-      <a href="/capture_image" class="btn btn-lg btn-warning">Open Camera</a>
-  {% endif %}
-  
+    <div class="modal fade" id="flashMessageModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Notification</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <p class="{{ category }}">{{ message }}</p>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
     </div>
+    <h4 class="text-center">Register Employee</h4>
+    {% if session.get('temp_image_path') %}
+    <div>
+        <img src="{{ url_for('static', filename='images/users/temp.jpg') }}" alt="Captured Face" width="200">
+        <h4>Captured Face Image</h4>
+    </div>
+    {% else %}
+    <p>No image captured yet. Please open the camera to capture your face.</p>  
+    {% endif %}
 
-    <br><br>
-
-    {% if session.img_captured %}
     <form method="POST">
       <div class="form-row">
-        <div class="form-group col-md-4">
+        <div class="form-group col-md-6">
           <label for="inputName">Name</label>
-          <input type="text" name='name' class="form-control" placeholder="Enter Employee name" id="inputName" required>
+          <input type="text" name='emp_name' class="form-control" placeholder="Enter Employee name" id="inputName" required>
         </div>
-        <div class="form-group col-md-4">
-          <label for="inputRoll">Employee Id</label>
-          <input type="text" name='employee_id' class="form-control" placeholder="Enter Employee Id" id="inputRoll" required>
+        <div class="form-group col-md-6">
+          <label for="inputEmployeeId">Employee Id</label>
+          <input type="text" name='emp_id' class="form-control" placeholder="Enter Employee Id" id="inputEmployeeId" required>
         </div>
-        <div class="form-group col-md-4">
-          <label for="inputSem">Phone No.</label>
-          <input type="tel" name="Phone" class="form-control" placeholder="Enter Phone No." id="inputPh" required>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group col-md-6">
+          <label for="inputPhone">Phone No.</label>
+          <input type="tel" name="phone" class="form-control" placeholder="Enter Phone No." id="inputPhone" required>
+        </div>
+        <div class="form-group col-md-6">
+          <label for="inputPassword">Password</label>
+          <input type="password" name="password" class="form-control" id="inputPassword" placeholder="Password" required>
         </div>
       </div>
 
@@ -75,35 +87,20 @@
         <div class="form-group col-md-6">
             <label for="email">Email (for OTP):</label>
             <input type="email" name="email" id="email" class="form-control" placeholder="Employee Email Id" required>
-            <button type="button" id="send-otp-btn" class="btn btn-secondary mt-2">Send OTP</button>
+            <button type="button" id="send-otp-btn" class="btn btn-secondary mt-2"><i class="fas fa-paper-plane"></i>Send OTP</button>
             <p id="otp-status" class="text-success"></p>
         </div>
     
         <div class="form-group col-md-6">
           <label for="otp">Enter OTP:</label>
           <input type="text" name="otp" id="otp" class="form-control" placeholder="Enter OTP" required>
-          <button type="button" id="verify-otp-btn" class="btn btn-secondary mt-2">Verify</button>
+          <button type="button" id="verify-otp-btn" class="btn btn-secondary mt-2"><i class="fas fa-check"></i>Verify</button>
           <p id="otp-verify-status" class="text-success"></p>
         </div>
       </div>
 
-      <div class="form-group col-md-6">
-        <label for="inputPassword4">Password</label>
-        <input type="password" name="password" class="form-control" id="inputPassword4" placeholder="Password" required>
-      </div>
-
-      <!-- <h3>Admin Info</h3>
-      <div class="form-row">
-        <div class="form-group col-md-6">
-          <label for="inputEmail4">Email</label>
-          <input type="email" name="email" class="form-control" id="inputEmail4" placeholder="Email" required>
-        </div>
-        
-      </div> -->
-
       <button type="submit" class="btn btn-primary">Register Employee</button>
     </form>
-    {% endif %}
   </section>
 
   <!-- Footer -->
@@ -113,12 +110,11 @@
 
   <!-- JavaScript -->
   <script src="{{ url_for('static', filename='js/register.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/Camera.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/face-api.js-models-master/main.js') }}"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
   <script>
-    // Send OTP
-    document.getElementById("send-otp-btn").addEventListener("click", function() {
+     // Send OTP
+     document.getElementById("send-otp-btn").addEventListener("click", function() {
       const email = document.getElementById("email").value;
   
       fetch("/verify", {
@@ -195,111 +191,15 @@
         console.error(error);
       });
     });
-    
-    // Open Camera (if needed)
-    document.getElementById('startCamera').onclick = function() {
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(function(stream) {
-          document.getElementById('videoElement').srcObject = stream;
-        })
-        .catch(function(error) {
-          console.log("Error accessing the camera: ", error);
-        });
-    };
-  
-    // When the registration form is successfully submitted
-    document.querySelector('form').addEventListener('submit', function(event) {
-      event.preventDefault(); // Prevent the form from submitting the traditional way
-  
-      // Perform the fetch or AJAX request to submit the form data
-      fetch('/register_employee', {
-        method: 'POST',
-        body: new FormData(this)
-      })
-      .then(response => {
-        if (response.ok) {
-          Swal.fire({
-            icon: 'success',
-            title: 'Employee Registered!',
-            text: 'The employee has been successfully registered.',
-            timer: 2000,
-            showConfirmButton: false
-          });
-  
-          // Reset the form after successful registration
-          resetForm();
-        } else {
-          throw new Error("Registration failed");
-        }
-      })
-      .catch(error => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error!',
-          text: 'Something went wrong. Please try again.',
-          timer: 2000,
-          showConfirmButton: false
-        });
-        console.error(error);
+    window.onload = function() {
+    var messages = JSON.parse('{{ get_flashed_messages(with_categories=true) | tojson | safe }}');
+
+    if (messages.length > 0) {
+      messages.forEach(function(msg) {
+        alert(msg[1]);  // Displays each flash message as a popup
       });
-    });
-  
-    // Function to reset the form and clear image/video
-    function resetForm() {
-      // Reset the form fields
-      document.querySelector('form').reset();
-  
-      // Clear the image preview or captured video
-      const videoElement = document.getElementById('videoElement');
-      const imagePreview = document.getElementById('imagePreview');
-      
-      // Clear video stream (if camera was used)
-      if (videoElement && videoElement.srcObject) {
-        const stream = videoElement.srcObject;
-        const tracks = stream.getTracks();
-        tracks.forEach(track => track.stop());
-        videoElement.srcObject = null;
-      }
-  
-      // Clear the image preview
-      if (imagePreview) {
-        imagePreview.src = ''; // Remove the preview image source
-      }
-  
-      // If there's a file input, reset it
-      const fileInput = document.querySelector('input[type="file"]');
-      if (fileInput) {
-        fileInput.value = ''; // Reset file input
-      }
     }
-  
-    // Call resetForm on page load to ensure initial state
-    window.addEventListener('load', resetForm);
-
-  function resetCapturedImage() {
-    // Clear the image preview
-    const imagePreview = document.getElementById('imagePreview');
-    if (imagePreview) {
-      imagePreview.src = '';  // Clear the preview image source
-    }
-
-    // Stop the video stream if it's playing (optional)
-    const videoElement = document.getElementById('videoElement');
-    if (videoElement && videoElement.srcObject) {
-      const stream = videoElement.srcObject;
-      const tracks = stream.getTracks();
-      tracks.forEach(track => track.stop()); // Stop all tracks of the stream
-      videoElement.srcObject = null; // Reset the video stream
-    }
-}
-
+  };
   </script>
-  
-  
-  
-  <!-- Bootstrap JS and Popper JS -->
-  <script src="{{ url_for('static', filename='jquery-3.2.1.slim.min.js') }}" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-  <script src="{{ url_for('static', filename='popper.min.js') }}" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-  <script src="{{ url_for('static', filename='bootstrap.min.js') }}" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 </body>
 </html>

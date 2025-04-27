@@ -76,7 +76,8 @@
       font-weight: bold;
     }
   </style>
-</head><body class="login-container">
+</head>
+<body class="login-container">
   <div class="login-container">
     <h2>Employee Login</h2>
 
@@ -90,7 +91,7 @@
     {% endwith %}
 
     <form method="POST" action="{{ url_for('employee_login') }}">
-      <input type="text" id="employee-id" name="employee_id" placeholder="Enter your Employee ID" required><br>
+      <input type="text" id="employee-id" name="emp_id" placeholder="Enter your Employee ID" required><br>
       <input type="password" name="password" placeholder="Enter Password" required><br>
       <button type="submit">Login</button>
     </form>

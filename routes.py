@@ -21,7 +21,6 @@ from datetime import datetime, date
 import cv2
 import face_recognition_models
 import face_recognition
-
 import numpy as np
 import os
 import time
@@ -65,7 +64,7 @@ def landing_page():
 @app.route('/employee_login', methods=['GET', 'POST'])
 def employee_login():
     if request.method == 'POST':
-        user_id = request.form.get('employee_id')
+        user_id = request.form.get('emp_id')
         password = request.form.get('password')
 
         # Debugging: Print values to check what is being entered
@@ -79,6 +78,7 @@ def employee_login():
         if user and check_password_hash(user.password, password):
             login_user(user)
             session['emp_id'] = user.emp_id  
+            flash("Login successful!", "success")
             return redirect(url_for('employee_dashboard'))
         else:
             flash("Invalid credentials", "error")
@@ -137,86 +137,108 @@ def calendar():
 @app.route('/register_employee', methods=['GET', 'POST'])
 def register_employee():
     if request.method == 'POST':
-        # Safely get the email from the form
+        entered_otp = request.form.get('otp')
+        if entered_otp != session.get('otp'):
+            flash('Invalid OTP! Please verify again.', 'danger')
+            return redirect(url_for('register_employee'))
+
+        emp_name = request.form.get('emp_name')
+        emp_id = request.form.get('emp_id')
         email = request.form.get('email')
-        
-        # Check if the employee already exists based on email
-        data = Employee.query.filter_by(email=email).first()
+        phone = request.form.get('phone')
+        hashed_password = generate_password_hash(request.form.get('password'), method='pbkdf2:sha256')
 
-        if data is None:
-            # Create new employee record
-            new_employee = Employee(
-                name=request.form.get("name"),
-                emp_id=request.form.get('employee_id'),
-                email=email,
-                phone=request.form.get("Phone"),
-                password=request.form.get("password"),  # Ensure the password is provided
-                pic_path=f'static/images/users/{request.form["employee_id"]}-{request.form["name"]}.jpg',  # Correct file path
-                registered_on=datetime.now()
-            )
-            
-            # Add the new employee to the database
-            try:
-                db.session.add(new_employee)
-                db.session.commit()  # Try to commit the new employee to the database
-                flash('Employee registration successful', 'success')
+        image_folder = 'static/images/users'
+        if not os.path.exists(image_folder):
+            os.makedirs(image_folder)
 
-                # If temp.jpg exists, rename it
-                if os.path.isfile('static/images/users/temp.jpg'):
-                    os.rename(
-                        'static/images/users/temp.jpg',
-                        f'static/images/users/{request.form["employee_id"]}-{request.form["name"]}.jpg'  # Correct path
-                    )
+        temp_image_path = session.get('temp_image_path', None)
+        final_image_path = os.path.join(image_folder, f"{emp_id}-{emp_name}.jpg")
 
-                # Remove session data if image was captured
-                session.pop('img_captured', None)  # Clear img_captured session variable
-                session.pop('dt', None)  # Clear datetime session variable (optional)
-                
-                # Return to initial form state
-                return redirect(url_for('register_employee'))
-
-            except Exception as e:
-                # Rollback in case of any error during commit
-                db.session.rollback()
-                print(f"Error occurred while saving employee: {e}")  # Log the error for debugging
-                flash('There was an issue with saving the employee record. Please try again.', 'danger')
-
+        # Debugging step - Check if temp image exists before renaming
+        if temp_image_path and os.path.isfile(temp_image_path):
+            os.rename(temp_image_path, final_image_path)
+            pic_path = final_image_path
         else:
-            # If employee with the same email exists
-            flash('Employee with this email already exists!', 'danger')
+            flash("No image captured, using placeholder.", "warning")
+            pic_path = 'static/images/no-image.png'
 
-    # Check if temp.jpg exists for displaying preview
-    if os.path.isfile('static/images/users/temp.jpg'):
-        temp_pic = True
-    else:
-        temp_pic = False
-    
-    return render_template('new_emp_register.html', temp_pic=temp_pic)
+        # Save to database (Assume Employee model exists)
+        new_employee = Employee(
+            name=emp_name,
+            emp_id=emp_id,
+            email=email,
+            phone=phone,
+            password=hashed_password,
+            pic_path=pic_path,
+            # registered_on=datetime.now()
+        )
+        print(f"Name: {emp_name}, ID: {emp_id}, Email: {email}, Phone: {phone}, Password: {hashed_password}") 
+        try:
+            db.session.add(new_employee)
+            db.session.commit()
+            flash('Employee registered successfully!', 'success')
 
-@app.route("/capture_image")
+            session.pop('otp', None)
+            if os.path.isfile(temp_image_path):
+                os.remove(temp_image_path)
+
+            return redirect(url_for('register_employee'))
+        except Exception as e:
+            db.session.rollback()
+            print(e)
+            flash('Error saving employee! Try again.', 'danger')
+            return redirect(url_for('register_employee'))
+
+    # Generate OTP for verification
+    if 'otp' not in session:
+        otp = str(random.randint(1000, 9999))
+        session['otp'] = otp
+        print(f"Generated OTP: {otp}")
+
+    temp_image_path = session.get('temp_image_path', None)
+    flash("Employee Registered successfully!", "success")
+    return render_template('new_emp_register.html', temp_image_path=temp_image_path)
+
+@app.route('/capture_image')
 def capture_image():
+    session['img_captured'] = False
+    return render_template('capture_face.html')
+
+@app.route('/start_camera')
+def start_camera():
+    global os 
     session['dt'] = datetime.now()
     path = 'static/images/users'
+    if not os.path.exists(path):
+        os.makedirs(path)
+
     cap = cv2.VideoCapture(0)
 
     while True:
-        # Capture frame-by-frame
         ret, frame = cap.read()
-
-        # Display the resulting frame
-        cv2.imshow('Press c to capture image', frame)
+        cv2.imshow('Press C to Capture', frame)
         if cv2.waitKey(1) & 0xFF == ord('c'):
-            cv2.imwrite(os.path.join(path, 'temp.jpg'), frame)
+            # Save the captured image
+            temp_image_path = os.path.join(path, 'temp.jpg')
+            cv2.imwrite(temp_image_path, frame)
             time.sleep(2)
             break
 
-    # When everything done, release the capture
     cap.release()
     cv2.destroyAllWindows()
 
-    session['img_captured'] = True
+    # Set session variable to indicate the image was captured
+    session['img_captured'] = True  # Mark that the image has been captured
+    print("Session value updated:", session['img_captured']) 
+    session['temp_image_path'] = temp_image_path  # Store the captured image path
+    import os
+    print("File exists:", os.path.exists(session.get('temp_image_path')))  # Debugging step
 
+    # Redirect back to the registration page after image capture
+    flash("Image Captured!", "success")
     return redirect(url_for('register_employee'))
+
 
 @app.route('/verify', methods=["POST"])
 def verify():
@@ -261,117 +283,6 @@ def view_attendance():
         attendance_records = Attendance.query.all()
         return render_template('check_att.html', records=attendance_records, no_data=False)
     
-# @app.route('/fr_attendance')
-# def fr_attendance():
-#     video_capture = VideoCapture(0)
-
-#     known_face_encodings = []
-#     known_face_names = []
-#     known_faces_filenames = []
-
-#     for (dirpath, dirnames, filenames) in os.walk('static/images/users'):
-#         known_faces_filenames.extend(filenames)
-#         break
-
-#     for filename in known_faces_filenames:
-#         face = face_recognition.load_image_file('static/images/users/' + filename)
-#         known_face_names.append(filename[:-4])  # Remove extension
-#         known_face_encodings.append(face_recognition.face_encodings(face)[0])
-
-#     face_locations = []
-#     face_encodings = []
-#     face_names = []
-#     process_this_frame = True
-
-#     while True:
-#         frame = video_capture.read()
-
-#         if process_this_frame:
-#             face_locations = face_recognition.face_locations(frame)
-#             face_encodings = face_recognition.face_encodings(frame, face_locations)
-#             face_names = []
-
-#             flag = False
-#             marked_ids = set()
-#             for face_encoding in face_encodings:
-#                 matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
-#                 emp_info = "Unknown"
-
-#                 face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
-#                 best_match_index = np.argmin(face_distances)
-
-#                 if matches[best_match_index]:
-#                     emp_info = known_face_names[best_match_index]  # E.g., "E101-Rahul"
-#                     emp_id, emp_name = emp_info.split('-')
-
-#                     if '-' in emp_info:
-#                         emp_id, emp_name = emp_info.split('-')  # Split into emp_id and emp_name
-#                     else:
-#                         # Handle the case where the format is not as expected (e.g., "Unknown")
-#                         emp_id = emp_name = "Unknown"  # Or take other appropriate action (skip, log error, etc.)
-
-#                     today = datetime.today().date()
-#                     exists = Attendance.query.filter_by(emp_id=emp_id, name=emp_name,  check_in=datetime.today().date()).first()
-
-#                     if not exists:
-#                         attendance = Attendance(
-#                             emp_id=emp_id,
-#                             name=emp_name,
-#                             status="present",
-#                             date=datetime.today().date(),
-#                             check_in=datetime.now().time()
-#                         )
-#                         db.session.add(attendance)
-#                         db.session.commit()
-#                         flag = True
-#                         flash(f"Attendance marked successfully for {emp_name}", "success")
-#                     else:
-#                         flash(f"Attendance already marked for {emp_name} today.", "warning")
-#                 face_names.append(emp_info)
-
-#         process_this_frame = not process_this_frame
-
-#         for (top, right, bottom, left), emp_info in zip(face_locations, face_names):
-#             cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
-#             font = cv2.FONT_HERSHEY_DUPLEX
-#             cv2.putText(frame, emp_info, (left + 6, bottom - 6), font, 0.5, (255, 255, 255), 1)
-#             if flag:
-#                 cv2.putText(frame, 'Marked', (left + 12, bottom - 12), font, 0.5, (0, 255, 0), 1)
-
-#         cv2.imshow('Employee Attendance', frame)
-
-#         if cv2.waitKey(1) & 0xFF == ord('q'):
-#             break
-
-#     video_capture.release()
-#     cv2.destroyAllWindows()
-#     return redirect(url_for('mark_attendance' ))
-
-# @app.route('/mark_attendance', methods=['POST'])
-# def mark_attendance():
-#     emp_id = request.form['emp_id']
-#     name = request.form['name']
-#     today = date.today()
-
-#     # Check if attendance already exists
-#     existing_attendance = Attendance.query.filter_by(emp_id=emp_id, date=today).first()
-
-#     if existing_attendance:
-#         flash("Your attendance is already marked for today.", "warning")
-#     else:
-#         check_in_time = datetime.now().time()
-#         new_attendance = Attendance(
-#             emp_id=emp_id,
-#             name=name,
-#             date=today,
-#             check_in=check_in_time,
-#             status='present'
-#         )
-#         db.session.add(new_attendance)
-#         db.session.commit()
-#         flash("Attendance marked successfully!", "success")
-
-#     return redirect(url_for('attendance_page')) 
 @app.route('/checkin')
 def checkin():
     video_capture = cv2.VideoCapture(0)
@@ -591,6 +502,7 @@ def leave_form():
         all_requests = AdminLeaveApproval.query.filter_by(emp_id=emp_id).order_by(AdminLeaveApproval.leave_date.desc()).all()
     else:
         all_requests = []
+    
     return render_template('send_leave_req.html', requests=all_requests)
  # create this file in templates folder
 
@@ -617,7 +529,10 @@ def request_holiday():
         current_date += timedelta(days=1)
 
     db.session.commit()
-    return redirect(url_for('leave_form'))  # <<< Redirect instead of re-render
+
+    flash("Leave request submitted successfully!", "success")  # ✅ Flash message before redirect
+    return redirect(url_for('leave_form'))  # ✅ Redirect to leave form
+  # <<< Redirect instead of re-render
 
   
 @app.route('/approve_holiday/<int:leave_id>')

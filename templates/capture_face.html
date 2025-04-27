@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Capture Face</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <!-- Navbar -->
+  <header>
+    <div class="navbar">
+        <h1 style="color: white;">VisagFace</h1>
+        <nav>
+          <div class="nav-links">
+            <a href="{{ url_for('admin_dashboard') }}">Home</a>
+            <a href="{{ url_for('view_attendance') }}">Check Attendance</a>
+            <a href="{{ url_for('manage_leaves') }}">Check Request</a>
+            <a href="{{ url_for('capture_image') }}">New Registration</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+          </div>
+        </nav>
+    </div>
+  </header>
+
+  <!-- Face Capture Section -->
+  <section id="capture-section" class="container mt-5" style="max-width: 900px; text-align: center; background-color: #ffffff; border-radius: 12px; padding: 30px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);">
+    <h4 class="text-center">Capture Employee Face</h4>
+
+    <div class="text-center">
+      <p class="text-muted">
+        Instructions:<br>
+        1. Click the button below to open the camera.<br>
+        2. Press <strong>'C'</strong> to capture the image.<br>
+        3. Once the image is captured, proceed to register the employee.
+      </p>
+      {% if not session.get('img_captured', False) %}
+    <!-- Button to open the camera and capture the face -->
+    <a href="{{ url_for('start_camera') }}" class="btn btn-lg btn-warning">Open Camera</a>
+{% else %}
+    <p>Face captured successfully!</p>
+    <!-- Optionally, show a button to proceed to registration -->
+    <a href="{{ url_for('register_employee') }}" class="btn btn-lg btn-success">Proceed with Registration</a>
+{% endif %}
+
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2024 VisagFace. All rights reserved.</p>
+  </footer>
+
+  <!-- JavaScript -->
+  <script src="{{ url_for('static', filename='js/Camera.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/face-api.js-models-master/main.js') }}"></script>
+
+</body>
+</html>

@@ -16,7 +16,7 @@
                 <a href="#">Home</a>
                 <a href="{{ url_for('view_attendance') }}">Check Attendance</a>
                 <a href="{{ url_for('manage_leaves') }}">Check Request</a>
-                <a href="{{ url_for('register_employee') }}">New Registration</a>
+                <a href="{{ url_for('capture_image') }}">New Registration</a>
                 <a href="{{ url_for('logout') }}">Logout</a>
             </div>
         </nav>
@@ -25,6 +25,30 @@
 
   <!-- Hero Section -->
   <section class="hero">
+    <div class="modal fade" id="flashMessageModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Notification</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <p class="{{ category }}">{{ message }}</p>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="hero-text">
       <h1>Welcome to VisagFace</h1>
       <p>Automate attendance with cutting-edge facial recognition technology.</p>
@@ -82,4 +106,14 @@
     <p>&copy; 2024 VisagFace. All rights reserved.</p>
   </footer>
 </body>
+<script> 
+  window.onload = function() {
+  var messages = JSON.parse('{{ get_flashed_messages(with_categories=true) | tojson | safe }}');
+
+  if (messages.length > 0) {
+    messages.forEach(function(msg) {
+      alert(msg[1]);  // Displays each flash message as a popup
+    });
+  }
+};</script>
 </html>
